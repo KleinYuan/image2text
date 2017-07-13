@@ -14,6 +14,22 @@ Datasets:
 
 - [X] [IAPR TC-12](http://www.imageclef.org/photodata)
 
+Sample annotations:
+
+```
+<DOC>
+<DOCNO>annotations/01/1000.eng</DOCNO>
+<TITLE>Godchild Cristian Patricio Umaginga Tuaquiza</TITLE>
+<DESCRIPTION>a dark-skinned boy wearing a knitted woolly hat and a light and dark grey striped jumper with a grey zip, leaning on a grey wall;</DESCRIPTION>
+<NOTES></NOTES>
+<LOCATION>Quilotoa, Ecuador</LOCATION>
+<DATE>April 2002</DATE>
+<IMAGE>images/01/1000.jpg</IMAGE>
+<THUMBNAIL>thumbnails/01/1000.jpg</THUMBNAIL>
+</DOC>
+```
+
+
 References:
 
 1. [Dong, Jianfeng, Xirong Li, and Cees GM Snoek. "Word2VisualVec: Image and video to sentence matching by visual feature prediction." CoRR, abs/1604.06838 (2016).](https://arxiv.org/pdf/1604.06838.pdf)

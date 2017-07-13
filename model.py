@@ -5,7 +5,7 @@ import os
 import collections
 import numpy as np
 import math
-
+import re
 
 class StoryNet:
 
@@ -22,11 +22,13 @@ class StoryNet:
         self.num_skips = 2  # How many times to reuse an input to generate a label.
         self.batch_size = 128
         self.data_index = 0
+        self.learning_rate = 1.0
 
         self.valid_size = 16  # Random set of words to evaluate similarity on.
         self.valid_window = 100  # Only pick dev samples in the head of the distribution.
         self.valid_examples = np.random.choice(self.valid_window, self.valid_size, replace=False)
         self.num_sampled = 64  # Number of negative examples to sample.
+        self.num_steps = 1000001
 
         self.annotation_fps = []
         self.image_fps = []
@@ -38,6 +40,15 @@ class StoryNet:
         self.features = None
         self.vocabulary_data = None
         self.reversed_dict_vocabulary_unk_tokenized = None
+        self.nn_init = None
+        self.train_inputs = None
+        self.train_labels = None
+        self.valid_dataset = None
+        self.session = None
+        self.loss = None
+        self.optimizer = None
+        self.similarity = None
+        self.normalized_embeddings = None
 
     # This method read file from path and grab description and image part
     # then abstract the description and return image file path and abstracted description
@@ -69,12 +80,9 @@ class StoryNet:
         for paragraph in description:
             for word in paragraph.split(' '):
                 if (word != ' ') and (word != ''):
+                    word = re.sub(r'[^\w]', ' ', word)
                     abstracted_description.append(word)
         return abstracted_description
-
-    @staticmethod
-    def _deduplicate(input_list):
-        return list(set(input_list))
 
     def _construct_vocabulary(self):
         print 'Open training data and scan all descriptions to construct a vocabulary object'
@@ -185,28 +193,79 @@ class StoryNet:
     def _define_graph(self):
         print 'Defining Graph ...'
         self.graph = tf.Graph()
-        train_inputs = tf.placeholder(tf.int32, shape=[self.batch_size])
-        train_labels = tf.placeholder(tf.int32, shape=[self.batch_size, 1])
-        valid_dataset = tf.constant(self.valid_examples, dtype=tf.int32)
+        with self.graph.as_default():
+            self.train_inputs = tf.placeholder(tf.int32, shape=[self.batch_size])
+            self.train_labels = tf.placeholder(tf.int32, shape=[self.batch_size, 1])
+            self.valid_dataset = tf.constant(self.valid_examples, dtype=tf.int32)
 
-        with tf.device('/cpu:0'):
-            # Look up embeddings for inputs.
-            embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
-            embed = tf.nn.embedding_lookup(embeddings, train_inputs)
+            with tf.device('/cpu:0'):
+                # Look up embeddings for inputs.
+                embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
+                embed = tf.nn.embedding_lookup(embeddings, self.train_inputs)
 
-            # Construct the variables for the NCE loss
-            nce_weights = tf.Variable(tf.truncated_normal([self.vocabulary_size, self.embedding_size], stddev=1.0 / math.sqrt(self.embedding_size)))
-            nce_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
+                # Construct the variables for the NCE loss
+                nce_weights = tf.Variable(tf.truncated_normal([self.vocabulary_size, self.embedding_size], stddev=1.0 / math.sqrt(self.embedding_size)))
+                nce_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
 
+            self.loss = tf.reduce_mean(
+                tf.nn.nce_loss(weights=nce_weights,
+                               biases=nce_biases,
+                               labels=self.train_labels,
+                               inputs=embed,
+                               num_sampled=self.num_sampled,
+                               num_classes=self.vocabulary_size))
+            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
+            # Compute the cosine similarity between minibatch examples and all embeddings.
 
+            norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
+            self.normalized_embeddings = embeddings / norm
+            valid_embeddings = tf.nn.embedding_lookup(self.normalized_embeddings, self.valid_dataset)
+            self.similarity = tf.matmul(valid_embeddings, self.normalized_embeddings, transpose_b=True)
+            self.nn_init = tf.global_variables_initializer()
 
     def train(self):
+        self._load_data()
+        self._define_graph()
         print 'Training ...'
+        with tf.Session(graph=self.graph) as self.session:
+            self.nn_init.run()
+            print 'Initialized!'
+
+            avg_loss = 0
+            for step in xrange(self.num_steps):
+                batch_input, batch_labels = self._create_batch(self.batch_size)
+                feed_dict = {
+                    self.train_inputs: batch_input,
+                    self.train_labels: batch_labels
+                }
+
+                _, loss_val = self.session.run(
+                    [self.optimizer, self.loss],
+                    feed_dict = feed_dict
+                )
+
+                avg_loss += loss_val
+
+                if step % 2000 == 0:
+                    if step > 0:
+                        avg_loss /= 2000
+                    print 'Average Loss at step %s: %s' % (step, avg_loss)
+                    avg_loss = 0
+
+                if step % 10000 == 0:
+                    sim = self.similarity.eval()
+                    for i in xrange(self.valid_size):
+                        valid_word = self.reversed_dict_vocabulary_unk_tokenized[self.valid_examples[i]]
+                        top_k = 8
+                        nearest = (-sim[i, :]).argsort()[1:top_k + 1]
+                        log_str = 'Nearest to %s' % valid_word
+
+                        for k in xrange(top_k):
+                            close_word = self.reversed_dict_vocabulary_unk_tokenized[nearest[k]]
+                            log_str = '%s %s, ' % (log_str, close_word)
+                        print log_str
+
+            final_embeddings = self.normalized_embeddings.eval()
 
     def predict(self):
         print 'Predicting with model in %s' % self.model_path
-
-storyNet = StoryNet(training_data_path='./iaprtc12', model_path='./model')
-storyNet._load_data()
-
-
