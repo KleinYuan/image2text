@@ -28,7 +28,7 @@ class StoryNet:
         self.valid_window = 100  # Only pick dev samples in the head of the distribution.
         self.valid_examples = np.random.choice(self.valid_window, self.valid_size, replace=False)
         self.num_sampled = 64  # Number of negative examples to sample.
-        self.num_steps = 1000001
+        self.num_steps = 10001
 
         self.annotation_fps = []
         self.image_fps = []
@@ -49,6 +49,7 @@ class StoryNet:
         self.optimizer = None
         self.similarity = None
         self.normalized_embeddings = None
+        self.final_embeddings = None
 
     # This method read file from path and grab description and image part
     # then abstract the description and return image file path and abstracted description
@@ -230,7 +231,7 @@ class StoryNet:
         with tf.Session(graph=self.graph) as self.session:
             self.nn_init.run()
             print 'Initialized!'
-
+            saver = tf.train.Saver()
             avg_loss = 0
             for step in xrange(self.num_steps):
                 batch_input, batch_labels = self._create_batch(self.batch_size)
@@ -265,7 +266,8 @@ class StoryNet:
                             log_str = '%s %s, ' % (log_str, close_word)
                         print log_str
 
-            final_embeddings = self.normalized_embeddings.eval()
+            self.final_embeddings = self.normalized_embeddings.eval()
+            saver.save(self.session, '%s/model' % self.model_path, global_step=self.num_steps)
 
     def predict(self):
         print 'Predicting with model in %s' % self.model_path
