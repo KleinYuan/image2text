@@ -2,23 +2,30 @@ import tensorflow as tf
 import random
 import xml.etree.ElementTree as ET
 import os
+import os.path
 import collections
 import numpy as np
 import math
 import re
+# import cv2
+from nolearn.lasagne import BatchIterator
+import pickle
 
-class StoryNet:
+
+class Word2Vec:
 
     def __init__(self, training_data_path, model_path):
         self.training_data_path = training_data_path
         self.vocabulary_annotation_eng_path = '%s/annotations_complete_eng' % self.training_data_path
         self.vocabulary_size = 4000
         self.bad_list_fp = './bad.list'
+        self.annotation_fps_fp = './annotation_fps_fp.list'
+        self.image_fps_fp = './image_fps.list'
         self.model_path = model_path
         self.data_set_name = 'IAPR TC-12 Benchmark'
         self.image_size = 96
         self.embedding_size = 128  # Dimension of the embedding vector.
-        self.skip_window = 1  # How many words to consider left and right.
+        self.skip_window = 1  # How many words to consider left and right. ---- Window Size |--| Word|--|
         self.num_skips = 2  # How many times to reuse an input to generate a label.
         self.batch_size = 128
         self.data_index = 0
@@ -28,7 +35,7 @@ class StoryNet:
         self.valid_window = 100  # Only pick dev samples in the head of the distribution.
         self.valid_examples = np.random.choice(self.valid_window, self.valid_size, replace=False)
         self.num_sampled = 64  # Number of negative examples to sample.
-        self.num_steps = 10001
+        self.num_steps = 50001
 
         self.annotation_fps = []
         self.image_fps = []
@@ -40,6 +47,7 @@ class StoryNet:
         self.features = None
         self.vocabulary_data = None
         self.reversed_dict_vocabulary_unk_tokenized = None
+        self.dict_vocabulary_unk_tokenized = None
         self.nn_init = None
         self.train_inputs = None
         self.train_labels = None
@@ -82,7 +90,8 @@ class StoryNet:
             for word in paragraph.split(' '):
                 if (word != ' ') and (word != ''):
                     word = re.sub(r'[^\w]', ' ', word)
-                    abstracted_description.append(word)
+                    word = word.split(' ')
+                    abstracted_description.extend(word)
         return abstracted_description
 
     def _construct_vocabulary(self):
@@ -91,7 +100,7 @@ class StoryNet:
             print 'Constructing from %s' % annotation_fp
             try:
                 image_fp, abstracted_description = self._read_xml_file(annotation_fp)
-                self.image_fps.extend(image_fp)
+                self.image_fps.append("%s|%s" % (image_fp, abstracted_description))
                 self.vocabulary.extend(abstracted_description)
             except:
                 self.bad_list.append(annotation_fp)
@@ -115,6 +124,24 @@ class StoryNet:
         for bad_file in self.bad_list:
             f.write('%s\n' % bad_file)
         f.close()
+
+    def _log_annotation_fps(self):
+        f = open(self.annotation_fps_fp, 'w')
+        for annotation_fp in self.annotation_fps:
+            if annotation_fp not in self.bad_list:
+                f.write('%s\n' % annotation_fp)
+        f.close()
+
+    def _log_images_fps(self):
+        f = open(self.image_fps_fp, 'w')
+        for image_fp in self.image_fps:
+            f.write('%s\n' % image_fp)
+        f.close()
+
+    def _log_info(self):
+        self._log_bad_list()
+        self._log_annotation_fps()
+        self._log_images_fps()
 
     # This method is to choose most common vocabulary_size words from master vocabulary
     # Then mark all others as UNK (a token to represent not common words)
@@ -145,6 +172,7 @@ class StoryNet:
 
         # Reverse dict_vocabulary_unk_tokenized with number as key and word as value
         self.reversed_dict_vocabulary_unk_tokenized = dict(zip(dict_vocabulary_unk_tokenized.values(), dict_vocabulary_unk_tokenized.keys()))
+        self.dict_vocabulary_unk_tokenized = dict_vocabulary_unk_tokenized
         '''
         # count[:5]: [['UNK', 2015], ('a', 54710), ('in', 25148), ('the', 23733), ('and', 23123)]
         # self.vocabulary_data[:5]: [0, 3547, 557, 2, 436]
@@ -157,7 +185,7 @@ class StoryNet:
         print 'Preparing data for training with %s' % self.data_set_name
         self._get_data_from_path_into_memory()
         self._construct_vocabulary()
-        self._log_bad_list()
+        self._log_info()
         self._unk_tokenize()
         batch, labels = self._create_batch(batch_size=8)
         for i in range(8):
@@ -267,6 +295,16 @@ class StoryNet:
                         print log_str
 
             self.final_embeddings = self.normalized_embeddings.eval()
+
+            # print self.final_embeddings[2], len(self.final_embeddings)
+            # print self.reversed_dict_vocabulary_unk_tokenized[2], len(self.reversed_dict_vocabulary_unk_tokenized)
+            with open('embeddings.pickle', 'wb') as f:
+                pickle.dump(self.final_embeddings, f)
+            with open('dict_vocabulary.pickle', 'wb') as f:
+                pickle.dump(self.dict_vocabulary_unk_tokenized, f)
+            with open('reversed_dict_vocabulary.pickle', 'wb') as f:
+                pickle.dump(self.reversed_dict_vocabulary_unk_tokenized, f)
+
             saver.save(self.session, '%s/model' % self.model_path, global_step=self.num_steps)
 
     def predict(self):

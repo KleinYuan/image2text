@@ -38,6 +38,15 @@ References:
 
 3. [Kiros, Ryan, Ruslan Salakhutdinov, and Rich Zemel. "Multimodal neural language models." Proceedings of the 31st International Conference on Machine Learning (ICML-14). 2014.](http://proceedings.mlr.press/v32/kiros14.pdf)
 
+4. [word2vec tutorial](http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/)
+
+# Overview
+
+1. Firstly, a word embedding with word2vec net is trained against iaprtc12 datasets.
+
+2. Secondly, the filtered (meaning, if the description is too long, we only keep the first sentence) word vectors for each description of image are used as target output of a CNN network
+
+
 
 # Network Design
 
