@@ -6,6 +6,10 @@ __pycache__/
 *$py.class
 .idea/
 .DS_Store
+log/
+vcnn-models/
+word2vec-models/
+iaprtc12/
 # C extensions
 *.so
 *.pickle

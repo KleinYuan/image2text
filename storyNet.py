@@ -1,21 +1,17 @@
 import tensorflow as tf
-import random
-import xml.etree.ElementTree as ET
 import os
 import os.path
-import collections
 import numpy as np
-import math
-import re
-from sklearn.utils import shuffle
-import cv2
-from nolearn.lasagne import BatchIterator
-from sklearn.model_selection import train_test_split
 import ast
-from statistics import mean, stdev
-from itertools import chain
+import cv2
 
-class VanillaCNN:
+from sklearn.utils import shuffle
+from nolearn.lasagne import BatchIterator
+from itertools import chain
+#from sklearn.model_selection import train_test_split
+
+
+class StoryNet:
 
     def __init__(self, training_data_fp_list, data_root_dir, embeddings, reversed_dict_vocabulary, dict_vocabulary, img_size=96, embedding_size=128):
         self.training_data_fp_list = training_data_fp_list
@@ -52,7 +48,7 @@ class VanillaCNN:
         self.y_test = None
         self.x_valid = None
         self.y_valid = None
-        self.model_parent_dir = './vanilla-models'
+        self.model_parent_dir = './vcnn-models'
         self.model_path = self.model_parent_dir + '/model.ckpt'
 
 
@@ -123,8 +119,8 @@ class VanillaCNN:
 
             self.predictions = self._define_net(input=self.x_batch,
                                                 training=self.is_training)
-            self.cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.y_batch, logits=self.predictions))
 
+            self.cross_entropy = tf.reduce_mean(-tf.reduce_sum(self.y_batch * tf.log(self.predictions), reduction_indices=[1]))
             self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9,
                                                     beta2=0.999, epsilon=0.001, use_locking=False,
                                                     name='Adam').minimize(self.cross_entropy)

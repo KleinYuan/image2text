@@ -7,35 +7,33 @@ import collections
 import numpy as np
 import math
 import re
-# import cv2
-from nolearn.lasagne import BatchIterator
 import pickle
 
 
 class Word2Vec:
 
-    def __init__(self, training_data_path, model_path):
+    def __init__(self, training_data_path, model_path, num_epochs=100001, learning_rate=0.1, vocabulary_size=4000, image_size=96):
         self.training_data_path = training_data_path
         self.vocabulary_annotation_eng_path = '%s/annotations_complete_eng' % self.training_data_path
-        self.vocabulary_size = 4000
+        self.vocabulary_size = vocabulary_size
         self.bad_list_fp = './bad.list'
         self.annotation_fps_fp = './annotation_fps_fp.list'
         self.image_fps_fp = './image_fps.list'
         self.model_path = model_path
         self.data_set_name = 'IAPR TC-12 Benchmark'
-        self.image_size = 96
+        self.image_size = image_size
         self.embedding_size = 128  # Dimension of the embedding vector.
         self.skip_window = 1  # How many words to consider left and right. ---- Window Size |--| Word|--|
         self.num_skips = 2  # How many times to reuse an input to generate a label.
         self.batch_size = 128
         self.data_index = 0
-        self.learning_rate = 1.0
+        self.learning_rate = learning_rate
 
         self.valid_size = 16  # Random set of words to evaluate similarity on.
         self.valid_window = 100  # Only pick dev samples in the head of the distribution.
         self.valid_examples = np.random.choice(self.valid_window, self.valid_size, replace=False)
         self.num_sampled = 64  # Number of negative examples to sample.
-        self.num_steps = 50001
+        self.num_epochs = num_epochs
 
         self.annotation_fps = []
         self.image_fps = []
@@ -261,7 +259,7 @@ class Word2Vec:
             print 'Initialized!'
             saver = tf.train.Saver()
             avg_loss = 0
-            for step in xrange(self.num_steps):
+            for step in xrange(self.num_epochs):
                 batch_input, batch_labels = self._create_batch(self.batch_size)
                 feed_dict = {
                     self.train_inputs: batch_input,
@@ -305,7 +303,7 @@ class Word2Vec:
             with open('reversed_dict_vocabulary.pickle', 'wb') as f:
                 pickle.dump(self.reversed_dict_vocabulary_unk_tokenized, f)
 
-            saver.save(self.session, '%s/model' % self.model_path, global_step=self.num_steps)
+            saver.save(self.session, '%s/model' % self.model_path, global_step=self.num_epochs)
 
     def predict(self):
         print 'Predicting with model in %s' % self.model_path
