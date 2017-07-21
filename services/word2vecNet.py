@@ -12,13 +12,16 @@ import pickle
 
 class Word2Vec:
 
-    def __init__(self, training_data_path, model_path, num_epochs=100001, learning_rate=0.1, vocabulary_size=4000, image_size=96):
+    def __init__(self, training_data_path, model_path, embeddings_fp, dict_vocabulary_fp, reversed_dict_vocabulary_fp, image_fps_fp, annotation_fps_fp, num_epochs=100001, learning_rate=0.1, vocabulary_size=4000, image_size=96):
         self.training_data_path = training_data_path
         self.vocabulary_annotation_eng_path = '%s/annotations_complete_eng' % self.training_data_path
         self.vocabulary_size = vocabulary_size
         self.bad_list_fp = './bad.list'
-        self.annotation_fps_fp = './annotation_fps_fp.list'
-        self.image_fps_fp = './image_fps.list'
+        self.annotation_fps_fp = annotation_fps_fp
+        self.embeddings_fp = embeddings_fp
+        self.dict_vocabulary_fp = dict_vocabulary_fp
+        self.reversed_dict_vocabulary_fp = reversed_dict_vocabulary_fp
+        self.image_fps_fp = image_fps_fp
         self.model_path = model_path
         self.data_set_name = 'IAPR TC-12 Benchmark'
         self.image_size = image_size
@@ -296,11 +299,12 @@ class Word2Vec:
 
             # print self.final_embeddings[2], len(self.final_embeddings)
             # print self.reversed_dict_vocabulary_unk_tokenized[2], len(self.reversed_dict_vocabulary_unk_tokenized)
-            with open('embeddings.pickle', 'wb') as f:
+
+            with open(self.embeddings_fp, 'wb') as f:
                 pickle.dump(self.final_embeddings, f)
-            with open('dict_vocabulary.pickle', 'wb') as f:
+            with open(self.dict_vocabulary_fp, 'wb') as f:
                 pickle.dump(self.dict_vocabulary_unk_tokenized, f)
-            with open('reversed_dict_vocabulary.pickle', 'wb') as f:
+            with open(self.reversed_dict_vocabulary_fp, 'wb') as f:
                 pickle.dump(self.reversed_dict_vocabulary_unk_tokenized, f)
 
             saver.save(self.session, '%s/model' % self.model_path, global_step=self.num_epochs)

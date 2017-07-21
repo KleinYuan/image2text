@@ -4,7 +4,7 @@ This repo is to implement a multi-modal natural language model with tensorflow.
 
 |**Dependencies**             |  **DataSets**|
 | --- | --- |
-|[tensorflow](https://www.tensorflow.org) <br/>[lasagne](https://https://github.com/Lasagne/Lasagne) <br/>[Theano](https://github.com/Theano/Theano) |[IAPR TC-12](http://www.imageclef.org/photodata)|
+|[python 2.7](https://www.python.org/download/releases/2.7/)<br/>[tensorflow](https://www.tensorflow.org) <br/>[lasagne](https://https://github.com/Lasagne/Lasagne) <br/>[Theano](https://github.com/Theano/Theano) |[IAPR TC-12](http://www.imageclef.org/photodata)|
 
 
 # Project Overview
