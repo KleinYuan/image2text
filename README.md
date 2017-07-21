@@ -64,7 +64,7 @@ More [details](http://www.imageclef.org/photodata).
 
 Sample annotations:
 
-`
+```
 
     <DOC>
     <DOCNO>annotations/01/1000.eng</DOCNO>
@@ -77,7 +77,7 @@ Sample annotations:
     <THUMBNAIL>thumbnails/01/1000.jpg</THUMBNAIL>
     </DOC>
 
-`
+```
 
 
 # References:
