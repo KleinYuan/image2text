@@ -38,6 +38,7 @@ class StoryNet:
         self.cross_entropy = None
         self.optimizer = None
         self.batch_size = 128
+        self.momentum = 0.9
         self.saver = None
 
         self.current_epoch = None
@@ -120,12 +121,10 @@ class StoryNet:
             self.predictions = self._define_net(input=self.x_batch,
                                                 training=self.is_training)
 
-            self.cross_entropy = tf.reduce_mean(-tf.reduce_sum(self.y_batch * tf.log(self.predictions), reduction_indices=[1]))
-            self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9,
-                                                    beta2=0.999, epsilon=0.001, use_locking=False,
-                                                    name='Adam').minimize(self.cross_entropy)
-
-            tf.summary.scalar("cross_entropy", self.cross_entropy)
+            self.loss = tf.reduce_mean(tf.square(self.predictions - self.y_batch))
+            tf.summary.scalar("loss", self.loss)
+            self.optimizer = tf.train.MomentumOptimizer(learning_rate=self.learning_rate, momentum=self.momentum,
+                                                        use_nesterov=True).minimize(self.loss)
 
     def _get_batch_predictions(self, batches):
         predicts = []
