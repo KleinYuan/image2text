@@ -21,9 +21,7 @@ Then, simply run below scripts to download the datasets
 
 Run:
 
-`
-    bash setup.sh
-`
+```bash setup.sh```
 
 
 # Network Design
@@ -36,10 +34,8 @@ Run:
 
 Run:
 
-`
+```python train.py```
 
-    python train.py
-`
 
 **Optimizer**             |  **Loss**
 :-------------------------:|:-------------------------:
