@@ -2,9 +2,9 @@
 
 This repo is to implement a multi-modal natural language model with tensorflow.
 
-**Dependencies**             |  **DataSets**
-:-------------------------:|:-------------------------:
-[tensorflow](https://www.tensorflow.org) <br/>[lasagne](https://https://github.com/Lasagne/Lasagne) <br/>[Theano](https://github.com/Theano/Theano) |[IAPR TC-12](http://www.imageclef.org/photodata)
+|**Dependencies**             |  **DataSets**|
+| --- | --- |
+|[tensorflow](https://www.tensorflow.org) <br/>[lasagne](https://https://github.com/Lasagne/Lasagne) <br/>[Theano](https://github.com/Theano/Theano) |[IAPR TC-12](http://www.imageclef.org/photodata)|
 
 
 # Project Overview
@@ -19,10 +19,11 @@ For various systems, you need to use different tools to install tensorflow, lasa
 
 Then, simply run below scripts to download the datasets
 
-```
+Run:
 
+`
     bash setup.sh
-```
+`
 
 
 # Network Design
@@ -33,10 +34,12 @@ Then, simply run below scripts to download the datasets
 
 # Training
 
-```
+Run:
+
+`
 
     python train.py
-```
+`
 
 **Optimizer**             |  **Loss**
 :-------------------------:|:-------------------------:
@@ -65,7 +68,7 @@ More [details](http://www.imageclef.org/photodata).
 
 Sample annotations:
 
-```
+`
 
     <DOC>
     <DOCNO>annotations/01/1000.eng</DOCNO>
@@ -78,7 +81,7 @@ Sample annotations:
     <THUMBNAIL>thumbnails/01/1000.jpg</THUMBNAIL>
     </DOC>
 
-```
+`
 
 
 # References:
