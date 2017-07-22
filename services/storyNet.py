@@ -4,54 +4,53 @@ import os.path
 import numpy as np
 import ast
 import cv2
-
+from config import config
 from sklearn.utils import shuffle
 from nolearn.lasagne import BatchIterator
 from itertools import chain
-#from sklearn.model_selection import train_test_split
 
 
 class StoryNet:
 
-    def __init__(self, training_data_fp_list, data_root_dir, embeddings, reversed_dict_vocabulary, dict_vocabulary, img_size=96, embedding_size=128):
+    def __init__(self, training_data_fp_list=None, data_root_dir=None, embeddings=None, reversed_dict_vocabulary=None, dict_vocabulary=None):
         self.training_data_fp_list = training_data_fp_list
         self.embeddings = embeddings
         self.reversed_dict_vocabulary = reversed_dict_vocabulary
         self.dict_vocabulary = dict_vocabulary
         self.data_root_dir = data_root_dir
+
+        self.img_size = config.image_size
+        self.num_word2describe = config.num_word2describe
+        self.embedding_size = config.embedding_size
+        self.num_output = self.num_word2describe * self.embedding_size
+
+        self.num_channels = 3
+        self.batch_size = 128
+        self.momentum = 0.9
+        self.learning_rate = 0.0001
+        self.num_epochs = 1001
+
+        self.model_parent_dir = './vcnn-models'
+        self.model_path = self.model_parent_dir + '/model.ckpt'
+
+        self.feed_X = None
+        self.feed_Y = None
         self.session = None
         self.x_batch = None
         self.y_batch = None
         self.predictions = None
         self.is_training = None
-        self.img_size = img_size
-        self.num_channels = 3
-        self.num_word2describe = 80
-        self.embedding_size = embedding_size
-        self.num_output = self.num_word2describe * self.embedding_size
-        self.feed_X = None
-        self.feed_Y = None
-
         self.graph = None
-        self.learning_rate = 0.0001
-        self.num_epochs = 1001
         self.cross_entropy = None
         self.optimizer = None
-        self.batch_size = 128
-        self.momentum = 0.9
         self.saver = None
-
         self.current_epoch = None
-
         self.x_train = None
         self.x_test = None
         self.y_train = None
         self.y_test = None
         self.x_valid = None
         self.y_valid = None
-        self.model_parent_dir = './vcnn-models'
-        self.model_path = self.model_parent_dir + '/model.ckpt'
-
 
     @staticmethod
     def fully_connected(input, size):

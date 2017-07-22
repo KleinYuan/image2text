@@ -1,6 +1,6 @@
 from services.word2vecNet import Word2Vec
 from services.storyNet import StoryNet
-import pickle
+from services.dataService import load_pickle
 
 # Run Setup Script to download this data sets
 training_data_fp = './iaprtc12'
@@ -14,12 +14,6 @@ reversed_dict_vocabulary_fp = '%s/reversed_dict_vocabulary.pickle' % generated_d
 image_fps = '%s/image_fps.list' % generated_data_fp
 annotation_fps_fp = '%s/annotation_fps_fp.list' % generated_data_fp
 word2vec_model_path = './word2vec-models'
-
-
-def load_pickle(fp):
-    with open(fp, 'r') as f:
-        content = pickle.load(f)
-    return content
 
 
 # Train word2Vec and obtain the word embeddings

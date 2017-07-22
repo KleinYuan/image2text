@@ -8,14 +8,15 @@ import numpy as np
 import math
 import re
 import pickle
+from config import config
 
 
 class Word2Vec:
 
-    def __init__(self, training_data_path, model_path, embeddings_fp, dict_vocabulary_fp, reversed_dict_vocabulary_fp, image_fps_fp, annotation_fps_fp, num_epochs=100001, learning_rate=0.1, vocabulary_size=4000, image_size=96):
+    def __init__(self, training_data_path, model_path, embeddings_fp, dict_vocabulary_fp, reversed_dict_vocabulary_fp, image_fps_fp, annotation_fps_fp, num_epochs=100001, learning_rate=0.1):
         self.training_data_path = training_data_path
         self.vocabulary_annotation_eng_path = '%s/annotations_complete_eng' % self.training_data_path
-        self.vocabulary_size = vocabulary_size
+        self.vocabulary_size = config.vocabulary_size
         self.bad_list_fp = './bad.list'
         self.annotation_fps_fp = annotation_fps_fp
         self.embeddings_fp = embeddings_fp
@@ -23,14 +24,14 @@ class Word2Vec:
         self.reversed_dict_vocabulary_fp = reversed_dict_vocabulary_fp
         self.image_fps_fp = image_fps_fp
         self.model_path = model_path
+        self.learning_rate = learning_rate
+
         self.data_set_name = 'IAPR TC-12 Benchmark'
-        self.image_size = image_size
-        self.embedding_size = 128  # Dimension of the embedding vector.
+        self.embedding_size = config.embedding_size  # Dimension of the embedding vector.
         self.skip_window = 1  # How many words to consider left and right. ---- Window Size |--| Word|--|
         self.num_skips = 2  # How many times to reuse an input to generate a label.
         self.batch_size = 128
         self.data_index = 0
-        self.learning_rate = learning_rate
 
         self.valid_size = 16  # Random set of words to evaluate similarity on.
         self.valid_window = 100  # Only pick dev samples in the head of the distribution.
@@ -41,9 +42,9 @@ class Word2Vec:
         self.annotation_fps = []
         self.image_fps = []
         self.bad_list = []
+        self.vocabulary = []
 
         # Placeholder properties
-        self.vocabulary = []
         self.images = None
         self.features = None
         self.vocabulary_data = None
@@ -308,6 +309,3 @@ class Word2Vec:
                 pickle.dump(self.reversed_dict_vocabulary_unk_tokenized, f)
 
             saver.save(self.session, '%s/model' % self.model_path, global_step=self.num_epochs)
-
-    def predict(self):
-        print 'Predicting with model in %s' % self.model_path

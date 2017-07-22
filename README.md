@@ -23,6 +23,10 @@ Run:
 
 ```bash setup.sh```
 
+or:
+
+```make setup```
+
 
 # Network Design
 
@@ -36,6 +40,10 @@ Run:
 
 ```python train.py```
 
+or:
+
+```make train```
+
 
 **Optimizer**             |  **Loss**
 :-------------------------:|:-------------------------:
@@ -46,11 +54,27 @@ MomentumOptimizer  | MSE Loss
 
 # Pre-trained Model
 
-Coming soon ...
+Download [here](https://www.dropbox.com/s/hxt8xwpy4wz429k/storyNet.pb?dl=0)
 
 # Testing and Results
 
-Coming soon ...
+Run:
+
+```
+make demo
+```
+
+
+# Train on your own
+
+1. Run setup bash script to download datasets
+
+2. Run train.py or with makefile
+
+3. Freeze tensorflow model with the command provided in makefile
+
+4. Run app.py or with makefile
+
 
 # Data Sets
 
