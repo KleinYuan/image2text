@@ -25,9 +25,3 @@ predictionApp = PredictionApp(net_name='storyNet',
 
 input_image = cv2.imread(test_image_fp)
 prediction = predictionApp.predict(input_image)
-
-
-
-
-
-

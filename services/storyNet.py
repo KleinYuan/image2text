@@ -160,7 +160,7 @@ class StoryNet:
 
                 img = cv2.resize(img, (self.img_size, self.img_size))
                 img = cv2.normalize(img, img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-                training_images.append(img)
+
             else:
                 bad_list.append(data)
                 continue
@@ -190,6 +190,7 @@ class StoryNet:
             if len(feature) == self.num_word2describe:
                 feature = list(chain.from_iterable(feature))
                 training_labels.append(feature)
+                training_images.append(img)
             if len(feature) > self.num_output:
                 raise
 
